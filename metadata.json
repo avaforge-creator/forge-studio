@@ -1,0 +1,8 @@
+{
+  "name": "Forge AI Studio",
+  "description": "A high-fidelity operational workforce management platform for 'Soft Intelligence' agents, featuring a dashboard, task manager, organization chart, and real-time activity logs.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
