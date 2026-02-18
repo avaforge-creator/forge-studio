@@ -16,7 +16,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Protected route wrapper
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   
   // Wait for auth state to be restored from localStorage
   if (isLoading) {
@@ -30,11 +30,23 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     );
   }
   
-  if (!isAuthenticated) {
+  // Double-check: user must exist AND email must be allowed
+  if (!isAuthenticated || !user || !isEmailAllowed(user.email)) {
     return <Navigate to="/login" replace />;
   }
   
   return <>{children}</>;
+};
+
+// Allowed emails - hardcoded for security
+const ALLOWED_EMAILS = [
+  'nikanwethr@gmail.com',
+  'babakwethr@gmail.com', 
+  'hsn_shrf@icloud.com'
+];
+
+const isEmailAllowed = (email: string): boolean => {
+  return ALLOWED_EMAILS.includes(email.toLowerCase());
 };
 
 const AppLayout: React.FC = () => {
