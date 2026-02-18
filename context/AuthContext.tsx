@@ -54,6 +54,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    // Check if Supabase is configured
+    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      return { success: false, error: 'Supabase not configured. Contact admin.' };
+    }
+
     // Check if email is allowed
     if (!isEmailAllowed(email)) {
       return { success: false, error: 'Email not authorized. Contact Nikan for access.' };
@@ -72,6 +77,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const signup = async (email: string, password: string, name: string): Promise<{ success: boolean; error?: string }> => {
+    // Check if Supabase is configured
+    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      return { success: false, error: 'Supabase not configured. Contact admin.' };
+    }
+
     // Check if email is allowed
     if (!isEmailAllowed(email)) {
       return { success: false, error: 'Email not authorized. Contact Nikan for access.' };

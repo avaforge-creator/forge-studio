@@ -1,17 +1,17 @@
 {
-  "updatedAt": 1771417701522,
+  "updatedAt": 1771422279804,
   "sessions": [
     {
       "sessionId": "c611548b-86a4-4484-814d-d48c91720617",
       "key": "agent:main:telegram:group:-5243448271",
       "kind": "group",
-      "updatedAt": 1771417572523,
-      "age": 124072,
-      "inputTokens": 128648,
-      "outputTokens": 210,
-      "totalTokens": 143082,
-      "remainingTokens": 56918,
-      "percentUsed": 72,
+      "updatedAt": 1771422219866,
+      "age": 55261,
+      "inputTokens": 135441,
+      "outputTokens": 239,
+      "totalTokens": 149601,
+      "remainingTokens": 50399,
+      "percentUsed": 75,
       "model": "MiniMax-M2.5",
       "contextTokens": 200000,
       "flags": [
@@ -20,21 +20,39 @@
       ]
     },
     {
-      "sessionId": "1868a14e-3d28-4214-85de-6170657d5587",
+      "sessionId": "4f6cd577-cc2a-4b38-b027-e611d6988676",
       "key": "agent:main:cron:f5f8d6a2-99a2-4c1c-abdd-56e339e60253",
       "kind": "direct",
-      "updatedAt": 1771412434222,
-      "age": 5262373,
-      "inputTokens": 1693,
-      "outputTokens": 458,
-      "totalTokens": 12054,
-      "remainingTokens": 187946,
-      "percentUsed": 6,
+      "updatedAt": 1771417834221,
+      "age": 4440906,
+      "inputTokens": 6466,
+      "outputTokens": 533,
+      "totalTokens": 13305,
+      "remainingTokens": 186695,
+      "percentUsed": 7,
       "model": "MiniMax-M2.5",
       "contextTokens": 200000,
       "flags": [
         "system",
-        "id:1868a14e-3d28-4214-85de-6170657d5587"
+        "id:4f6cd577-cc2a-4b38-b027-e611d6988676"
+      ]
+    },
+    {
+      "sessionId": "4f6cd577-cc2a-4b38-b027-e611d6988676",
+      "key": "agent:main:cron:f5f8d6a2-99a2-4c1c-abdd-56e339e60253:run:4f6cd577-cc2a-4b38-b027-e611d6988676",
+      "kind": "direct",
+      "updatedAt": 1771417834221,
+      "age": 4440906,
+      "inputTokens": 6466,
+      "outputTokens": 533,
+      "totalTokens": 13305,
+      "remainingTokens": 186695,
+      "percentUsed": 7,
+      "model": "MiniMax-M2.5",
+      "contextTokens": 200000,
+      "flags": [
+        "system",
+        "id:4f6cd577-cc2a-4b38-b027-e611d6988676"
       ]
     },
     {
@@ -42,7 +60,7 @@
       "key": "agent:main:cron:f5f8d6a2-99a2-4c1c-abdd-56e339e60253:run:1868a14e-3d28-4214-85de-6170657d5587",
       "kind": "direct",
       "updatedAt": 1771412434222,
-      "age": 5262373,
+      "age": 9840905,
       "inputTokens": 1693,
       "outputTokens": 458,
       "totalTokens": 12054,
@@ -60,7 +78,7 @@
       "key": "agent:main:cron:f5f8d6a2-99a2-4c1c-abdd-56e339e60253:run:d3b8f1ab-0a39-4736-ab14-a72ab10b3594",
       "kind": "direct",
       "updatedAt": 1771407034225,
-      "age": 10662370,
+      "age": 15240902,
       "inputTokens": 2217,
       "outputTokens": 326,
       "totalTokens": 12595,
@@ -78,7 +96,7 @@
       "key": "agent:main:main",
       "kind": "direct",
       "updatedAt": 1771402001271,
-      "age": 15695324,
+      "age": 20273856,
       "inputTokens": 211498,
       "outputTokens": 645,
       "totalTokens": 119873,
@@ -96,7 +114,7 @@
       "key": "agent:main:cron:f5f8d6a2-99a2-4c1c-abdd-56e339e60253:run:70c3061e-5c4c-441c-9de9-d1e5f6a86296",
       "kind": "direct",
       "updatedAt": 1771401634249,
-      "age": 16062346,
+      "age": 20640878,
       "inputTokens": 951,
       "outputTokens": 313,
       "totalTokens": 12254,
@@ -114,7 +132,7 @@
       "key": "agent:main:cron:f5f8d6a2-99a2-4c1c-abdd-56e339e60253:run:367d8ce3-3732-4f8c-8c12-eae45e4204b1",
       "kind": "direct",
       "updatedAt": 1771396234398,
-      "age": 21462197,
+      "age": 26040729,
       "inputTokens": 4641,
       "outputTokens": 463,
       "totalTokens": 13291,
@@ -132,7 +150,7 @@
       "key": "agent:main:cron:3b02aee2-f450-4a64-bfa1-278c228171c4",
       "kind": "direct",
       "updatedAt": 1771395458239,
-      "age": 22238356,
+      "age": 26816888,
       "inputTokens": 97938,
       "outputTokens": 1795,
       "totalTokens": 33860,
@@ -150,7 +168,7 @@
       "key": "agent:main:cron:3b02aee2-f450-4a64-bfa1-278c228171c4:run:d87eba92-df1c-4f68-bee9-1adec402c574",
       "kind": "direct",
       "updatedAt": 1771395458239,
-      "age": 22238356,
+      "age": 26816888,
       "inputTokens": 97938,
       "outputTokens": 1795,
       "totalTokens": 33860,
@@ -162,38 +180,20 @@
         "system",
         "id:d87eba92-df1c-4f68-bee9-1adec402c574"
       ]
-    },
-    {
-      "sessionId": "aaf5ac00-9806-448c-b947-f872f94dc6e5",
-      "key": "agent:main:cron:f5f8d6a2-99a2-4c1c-abdd-56e339e60253:run:aaf5ac00-9806-448c-b947-f872f94dc6e5",
-      "kind": "direct",
-      "updatedAt": 1771390834218,
-      "age": 26862377,
-      "inputTokens": 2647,
-      "outputTokens": 452,
-      "totalTokens": 12388,
-      "remainingTokens": 187612,
-      "percentUsed": 6,
-      "model": "MiniMax-M2.5",
-      "contextTokens": 200000,
-      "flags": [
-        "system",
-        "id:aaf5ac00-9806-448c-b947-f872f94dc6e5"
-      ]
     }
   ],
   "agents": [
     {
       "agentId": "main",
-      "sessionsCount": 22,
-      "lastUpdatedAt": 1771417572523,
-      "lastActiveAgeMs": 123955
+      "sessionsCount": 23,
+      "lastUpdatedAt": 1771422219866,
+      "lastActiveAgeMs": 55142
     },
     {
       "agentId": "eli",
       "sessionsCount": 1,
       "lastUpdatedAt": 1771220077657,
-      "lastActiveAgeMs": 197618821
+      "lastActiveAgeMs": 202197351
     },
     {
       "agentId": "jenny",
@@ -205,7 +205,7 @@
       "agentId": "kai",
       "sessionsCount": 2,
       "lastUpdatedAt": 1771329854978,
-      "lastActiveAgeMs": 87841500
+      "lastActiveAgeMs": 92420030
     },
     {
       "agentId": "lily_babak",
@@ -241,7 +241,7 @@
       "agentId": "omar",
       "sessionsCount": 3,
       "lastUpdatedAt": 1771329229658,
-      "lastActiveAgeMs": 88466820
+      "lastActiveAgeMs": 93045350
     },
     {
       "agentId": "sophia",
@@ -258,23 +258,23 @@
   ],
   "activeTasks": [
     {
-      "id": "live-main-1771417701522",
+      "id": "live-main-1771422279804",
       "agentId": "main",
       "sessionId": "c611548b-86a4-4484-814d-d48c91720617",
       "task": "Responding in group chat",
-      "status": "idle",
-      "updatedAt": 1771417572523,
-      "ageMs": 126564,
-      "tokens": 143082
+      "status": "running",
+      "updatedAt": 1771422219866,
+      "ageMs": 57517,
+      "tokens": 149601
     }
   ],
   "totals": {
-    "inputTokens": 549864,
-    "outputTokens": 6915,
-    "totalTokens": 556779,
-    "contextUsed": 143082,
+    "inputTokens": 565249,
+    "outputTokens": 7100,
+    "totalTokens": 572349,
+    "contextUsed": 149601,
     "contextLimit": 200000,
-    "contextPercent": 71.541,
+    "contextPercent": 74.8005,
     "dailySpend": 3.6357919999999995
   },
   "usage": [
@@ -307,11 +307,11 @@
     },
     {
       "date": "2026-02-18",
-      "input": 30879290,
-      "output": 118023,
-      "cacheRead": 6836991,
-      "cacheWrite": 8334272,
-      "totalTokens": 45686276,
+      "input": 32084888,
+      "output": 121329,
+      "cacheRead": 7041100,
+      "cacheWrite": 9056094,
+      "totalTokens": 47821111,
       "totalCost": 3.6357919999999995
     }
   ]
