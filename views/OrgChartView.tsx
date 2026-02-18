@@ -145,9 +145,9 @@ const OrgChartView: React.FC = () => {
 
   const expandAll = () => setCollapsedClusters({});
   const collapseAll = () => {
-    const all = {};
-    const clusters = [...new Set(agents.map(a => a.cluster).filter(Boolean))];
-    clusters.forEach(c => (all[c!] = true));
+    const all: Record<string, boolean> = {};
+    const clusters = [...new Set(agents.map(a => a.cluster).filter(Boolean))] as string[];
+    clusters.forEach(c => (all[c] = true));
     setCollapsedClusters(all);
   };
 
@@ -155,11 +155,11 @@ const OrgChartView: React.FC = () => {
   const getDepartmentHead = (layer: string) => agents.find(a => a.layer === layer && !a.cluster) || agents.find(a => a.layer === layer);
 
   return (
-    <div className="flex-1 overflow-y-auto bg-grid-subtle relative p-8 pb-24">
+    <div className="flex-1 overflow-y-auto bg-grid-subtle relative p-4 md:p-8 pb-24">
       <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div>
 
       {/* Header & Controls */}
-      <div className="flex items-center justify-between mb-8 relative z-10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 relative z-10">
         <div>
           <h2 className="text-3xl font-extrabold text-white tracking-tight font-display">Organization Chart</h2>
           <p className="text-forge-text-muted mt-1 text-sm font-light">
@@ -183,7 +183,7 @@ const OrgChartView: React.FC = () => {
       </div>
 
       {/* Top Metrics Strip */}
-      <div className="grid grid-cols-5 gap-4 mb-8 relative z-10">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4 mb-8 relative z-10">
         {[
           { label: 'Chiefs', val: agents.filter(a => a.role.includes('Chief') || a.role.includes('Director') || a.role.length < 5).length, icon: 'shield_person', color: 'text-primary' },
           { label: 'Total Units', val: agents.length, icon: 'group', color: 'text-white' },
@@ -225,7 +225,7 @@ const OrgChartView: React.FC = () => {
 
       {/* Executive Section */}
       <div className="flex flex-col items-center mb-16 relative z-10">
-        <div className="bg-forge-surface p-1 rounded-2xl border-2 border-primary shadow-glow-gold w-80 relative transition-transform hover:scale-105">
+        <div className="bg-forge-surface p-1 rounded-2xl border-2 border-primary shadow-glow-gold w-full max-w-[320px] relative transition-transform hover:scale-105">
           <div className="flex items-center gap-4 p-4">
             <div className="relative">
               <img alt="Director" className="size-14 rounded-xl object-cover ring-2 ring-primary/20" src="https://picsum.photos/seed/director/200/200" />
@@ -243,7 +243,7 @@ const OrgChartView: React.FC = () => {
         
         <div className="connecting-line h-12"></div>
 
-        <div className="bg-[#121212]/80 backdrop-blur-md p-1 rounded-2xl border border-forge-emerald/40 shadow-glow-emerald w-80 relative group hover:scale-105 transition-transform">
+        <div className="bg-[#121212]/80 backdrop-blur-md p-1 rounded-2xl border border-forge-emerald/40 shadow-glow-emerald w-full max-w-[320px] relative group hover:scale-105 transition-transform">
           <div className="flex items-center gap-4 p-4">
             <div className="relative">
               <img alt="AVA" className="size-14 rounded-xl object-cover ring-2 ring-forge-emerald/20 shadow-2xl" src="https://picsum.photos/seed/ava/200/200" />

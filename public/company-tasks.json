@@ -1,0 +1,125 @@
+{
+  "tasks": [
+    {
+      "id": "task-mc-data",
+      "title": "Connect Mission Control to Real Data",
+      "assignedTo": "zara",
+      "status": "in-progress",
+      "type": "DESIGN",
+      "executionState": "running",
+      "progress": 60,
+      "steps": [
+        {
+          "label": "Review mock data structure",
+          "completed": true
+        },
+        {
+          "label": "Create real data file",
+          "completed": true
+        },
+        {
+          "label": "Update constants",
+          "completed": true
+        },
+        {
+          "label": "Test integration",
+          "completed": false
+        }
+      ],
+      "latestLogs": [
+        "Connecting to real agents",
+        "Eli, Kai, Zara, Omar loaded"
+      ]
+    },
+    {
+      "id": "task-agent-delegation",
+      "title": "Test Agent Delegation System",
+      "assignedTo": "main",
+      "status": "in-progress",
+      "type": "RESEARCH",
+      "executionState": "running",
+      "progress": 81,
+      "steps": [
+        {
+          "label": "Set up agents in config",
+          "completed": true
+        },
+        {
+          "label": "Test sessions_spawn",
+          "completed": true
+        },
+        {
+          "label": "Verify delegation works",
+          "completed": true
+        },
+        {
+          "label": "Document process",
+          "completed": false
+        }
+      ],
+      "latestLogs": [
+        "Kai successfully analyzed experiment",
+        "Delegation system working"
+      ]
+    },
+    {
+      "id": "task-dashboard-fix",
+      "title": "Fix Dashboard Rendering Issues",
+      "assignedTo": "zara",
+      "status": "todo",
+      "type": "INFRA",
+      "executionState": "idle",
+      "progress": 4,
+      "steps": [
+        {
+          "label": "Investigate blank screen",
+          "completed": true
+        },
+        {
+          "label": "Fix React bundling",
+          "completed": true
+        },
+        {
+          "label": "Verify all agents display",
+          "completed": false
+        }
+      ],
+      "latestLogs": [
+        "Fixed CDN loading issue",
+        "Added missing agents"
+      ]
+    },
+    {
+      "id": "task-new-feature",
+      "title": "Add Context Limit Display",
+      "assignedTo": "zara",
+      "status": "in-progress",
+      "type": "FEATURE",
+      "executionState": "running",
+      "progress": 91,
+      "steps": [
+        {
+          "label": "Design UI component",
+          "completed": true
+        },
+        {
+          "label": "Connect to OpenClaw data",
+          "completed": true
+        },
+        {
+          "label": "Add to header",
+          "completed": true
+        },
+        {
+          "label": "Test and verify",
+          "completed": false
+        }
+      ],
+      "latestLogs": [
+        "Context display added to TopHeader",
+        "Real-time token data connected"
+      ]
+    }
+  ],
+  "updatedAt": 1771407957000
+}

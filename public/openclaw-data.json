@@ -1,0 +1,315 @@
+{
+  "updatedAt": 1771409196120,
+  "sessions": [
+    {
+      "sessionId": "672c9010-5d4e-4033-add1-a27911a52d6d",
+      "key": "agent:jenny:subagent:eb8badc8-f0b1-4df4-9e9e-a5d0e3d6ceee",
+      "kind": "direct",
+      "updatedAt": 1771409041474,
+      "age": 149886,
+      "inputTokens": 5113,
+      "outputTokens": 1001,
+      "totalTokens": 6045,
+      "remainingTokens": 193955,
+      "percentUsed": 3,
+      "model": "MiniMax-M2.5",
+      "contextTokens": 200000,
+      "flags": [
+        "aborted",
+        "id:672c9010-5d4e-4033-add1-a27911a52d6d"
+      ]
+    },
+    {
+      "sessionId": "c611548b-86a4-4484-814d-d48c91720617",
+      "key": "agent:main:telegram:group:-5243448271",
+      "kind": "group",
+      "updatedAt": 1771409019438,
+      "age": 171922,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "totalTokens": 0,
+      "remainingTokens": 0,
+      "percentUsed": 0,
+      "model": "MiniMax-M2.5",
+      "contextTokens": 200000,
+      "flags": [
+        "system",
+        "id:c611548b-86a4-4484-814d-d48c91720617"
+      ]
+    },
+    {
+      "sessionId": "2b701406-5ae8-4336-a0d8-9a0bc73e454d",
+      "key": "agent:kai:subagent:53604b43-ec2c-4ee5-8b56-dcadbe72c74d",
+      "kind": "direct",
+      "updatedAt": 1771408996741,
+      "age": 194619,
+      "inputTokens": 3112,
+      "outputTokens": 1133,
+      "totalTokens": 3903,
+      "remainingTokens": 196097,
+      "percentUsed": 2,
+      "model": "MiniMax-M2.5",
+      "contextTokens": 200000,
+      "flags": [
+        "id:2b701406-5ae8-4336-a0d8-9a0bc73e454d"
+      ]
+    },
+    {
+      "sessionId": "50f8e6fb-f9d4-4257-84ef-5e0388a5adb6",
+      "key": "agent:noah:subagent:1c945129-2a08-4836-9d29-20d77abe068f",
+      "kind": "direct",
+      "updatedAt": 1771407054768,
+      "age": 2136592,
+      "inputTokens": 45945,
+      "outputTokens": 2032,
+      "totalTokens": 19710,
+      "remainingTokens": 180290,
+      "percentUsed": 10,
+      "model": "MiniMax-M2.5",
+      "contextTokens": 200000,
+      "flags": [
+        "id:50f8e6fb-f9d4-4257-84ef-5e0388a5adb6"
+      ]
+    },
+    {
+      "sessionId": "d3b8f1ab-0a39-4736-ab14-a72ab10b3594",
+      "key": "agent:main:cron:f5f8d6a2-99a2-4c1c-abdd-56e339e60253",
+      "kind": "direct",
+      "updatedAt": 1771407034225,
+      "age": 2157135,
+      "inputTokens": 2217,
+      "outputTokens": 326,
+      "totalTokens": 12595,
+      "remainingTokens": 187405,
+      "percentUsed": 6,
+      "model": "MiniMax-M2.5",
+      "contextTokens": 200000,
+      "flags": [
+        "system",
+        "id:d3b8f1ab-0a39-4736-ab14-a72ab10b3594"
+      ]
+    },
+    {
+      "sessionId": "d3b8f1ab-0a39-4736-ab14-a72ab10b3594",
+      "key": "agent:main:cron:f5f8d6a2-99a2-4c1c-abdd-56e339e60253:run:d3b8f1ab-0a39-4736-ab14-a72ab10b3594",
+      "kind": "direct",
+      "updatedAt": 1771407034225,
+      "age": 2157135,
+      "inputTokens": 2217,
+      "outputTokens": 326,
+      "totalTokens": 12595,
+      "remainingTokens": 187405,
+      "percentUsed": 6,
+      "model": "MiniMax-M2.5",
+      "contextTokens": 200000,
+      "flags": [
+        "system",
+        "id:d3b8f1ab-0a39-4736-ab14-a72ab10b3594"
+      ]
+    },
+    {
+      "sessionId": "4fbb7e4d-6491-43d8-8367-c04d9daee7e9",
+      "key": "agent:noah:subagent:58a4a376-d02c-41e6-9925-cc8eae947e42",
+      "kind": "direct",
+      "updatedAt": 1771406746846,
+      "age": 2444514,
+      "inputTokens": 554783,
+      "outputTokens": 3610,
+      "totalTokens": 51073,
+      "remainingTokens": 148927,
+      "percentUsed": 26,
+      "model": "MiniMax-M2.5",
+      "contextTokens": 200000,
+      "flags": [
+        "aborted",
+        "id:4fbb7e4d-6491-43d8-8367-c04d9daee7e9"
+      ]
+    },
+    {
+      "sessionId": "3cbcbd7c-c265-418e-9e5b-5d93778248bc",
+      "key": "agent:noah:subagent:f0754f9f-4170-43f8-8188-53d6e9f8cbea",
+      "kind": "direct",
+      "updatedAt": 1771406464306,
+      "age": 2727054,
+      "inputTokens": 118743,
+      "outputTokens": 2988,
+      "totalTokens": 31356,
+      "remainingTokens": 168644,
+      "percentUsed": 16,
+      "model": "MiniMax-M2.5",
+      "contextTokens": 200000,
+      "flags": [
+        "id:3cbcbd7c-c265-418e-9e5b-5d93778248bc"
+      ]
+    },
+    {
+      "sessionId": "6ade7775-b96e-4069-8c0b-31b1b97d42e8",
+      "key": "agent:noah:subagent:f3443953-5da6-4755-b5f7-3991ecde4602",
+      "kind": "direct",
+      "updatedAt": 1771406228627,
+      "age": 2962733,
+      "inputTokens": 157708,
+      "outputTokens": 2666,
+      "totalTokens": 27936,
+      "remainingTokens": 172064,
+      "percentUsed": 14,
+      "model": "MiniMax-M2.5",
+      "contextTokens": 200000,
+      "flags": [
+        "aborted",
+        "id:6ade7775-b96e-4069-8c0b-31b1b97d42e8"
+      ]
+    },
+    {
+      "sessionId": "80ca05e9-3f7e-4bf8-b925-6db5a1a30145",
+      "key": "agent:main:main",
+      "kind": "direct",
+      "updatedAt": 1771402001271,
+      "age": 7190089,
+      "inputTokens": 211498,
+      "outputTokens": 645,
+      "totalTokens": 119873,
+      "remainingTokens": 80127,
+      "percentUsed": 60,
+      "model": "MiniMax-M2.5",
+      "contextTokens": 200000,
+      "flags": [
+        "system",
+        "id:80ca05e9-3f7e-4bf8-b925-6db5a1a30145"
+      ]
+    }
+  ],
+  "agents": [
+    {
+      "agentId": "main",
+      "sessionsCount": 21,
+      "lastUpdatedAt": 1771409019438,
+      "lastActiveAgeMs": 171804
+    },
+    {
+      "agentId": "eli",
+      "sessionsCount": 1,
+      "lastUpdatedAt": 1771220077657,
+      "lastActiveAgeMs": 189113585
+    },
+    {
+      "agentId": "jenny",
+      "sessionsCount": 1,
+      "lastUpdatedAt": 1771409041474,
+      "lastActiveAgeMs": 149768
+    },
+    {
+      "agentId": "kai",
+      "sessionsCount": 3,
+      "lastUpdatedAt": 1771408996741,
+      "lastActiveAgeMs": 194501
+    },
+    {
+      "agentId": "lily_babak",
+      "sessionsCount": 0,
+      "lastUpdatedAt": null,
+      "lastActiveAgeMs": null
+    },
+    {
+      "agentId": "luca",
+      "sessionsCount": 0,
+      "lastUpdatedAt": null,
+      "lastActiveAgeMs": null
+    },
+    {
+      "agentId": "maya",
+      "sessionsCount": 0,
+      "lastUpdatedAt": null,
+      "lastActiveAgeMs": null
+    },
+    {
+      "agentId": "nina",
+      "sessionsCount": 0,
+      "lastUpdatedAt": null,
+      "lastActiveAgeMs": null
+    },
+    {
+      "agentId": "noah",
+      "sessionsCount": 4,
+      "lastUpdatedAt": 1771407054768,
+      "lastActiveAgeMs": 2136474
+    },
+    {
+      "agentId": "omar",
+      "sessionsCount": 3,
+      "lastUpdatedAt": 1771329229658,
+      "lastActiveAgeMs": 79961584
+    },
+    {
+      "agentId": "sophia",
+      "sessionsCount": 0,
+      "lastUpdatedAt": null,
+      "lastActiveAgeMs": null
+    },
+    {
+      "agentId": "zara",
+      "sessionsCount": 0,
+      "lastUpdatedAt": null,
+      "lastActiveAgeMs": null
+    }
+  ],
+  "activeTasks": [
+    {
+      "id": "live-main-1771409196120",
+      "agentId": "main",
+      "sessionId": "c611548b-86a4-4484-814d-d48c91720617",
+      "task": "Responding in group chat",
+      "status": "idle",
+      "updatedAt": 1771409019438,
+      "ageMs": 174257,
+      "tokens": 0
+    }
+  ],
+  "totals": {
+    "inputTokens": 1101336,
+    "outputTokens": 14727,
+    "totalTokens": 1116063,
+    "contextUsed": 6045,
+    "contextLimit": 200000,
+    "contextPercent": 3.0225,
+    "dailySpend": 3.6357919999999995
+  },
+  "usage": [
+    {
+      "date": "2026-02-15",
+      "input": 1580995,
+      "output": 18737,
+      "cacheRead": 1494216,
+      "cacheWrite": 363615,
+      "totalTokens": 3457563,
+      "totalCost": 0
+    },
+    {
+      "date": "2026-02-16",
+      "input": 20575857,
+      "output": 58731,
+      "cacheRead": 9203940,
+      "cacheWrite": 2239170,
+      "totalTokens": 32077698,
+      "totalCost": 0
+    },
+    {
+      "date": "2026-02-17",
+      "input": 24551512,
+      "output": 63663,
+      "cacheRead": 7293647,
+      "cacheWrite": 8153415,
+      "totalTokens": 40062237,
+      "totalCost": 0
+    },
+    {
+      "date": "2026-02-18",
+      "input": 27204924,
+      "output": 111584,
+      "cacheRead": 6333511,
+      "cacheWrite": 6697915,
+      "totalTokens": 39865634,
+      "totalCost": 3.6357919999999995
+    }
+  ]
+}

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useScope } from '../context/ScopeContext';
 import { Task, Agent } from '../types';
+import { useLiveUpdates } from '../hooks/useLiveUpdates';
 
 const TaskCard: React.FC<{ 
   task: Task; 
@@ -55,7 +56,7 @@ const TaskCard: React.FC<{
 
       <div className="mt-2 h-1 w-full bg-[#1A1B1E] rounded-full overflow-hidden">
         <div 
-          className={`h-full transition-all duration-500 ${task.executionState === 'blocked' ? 'bg-forge-rose' : 'bg-primary'}`}
+          className={`h-full transition-all duration-700 ${task.executionState === 'blocked' ? 'bg-forge-rose' : task.executionState === 'running' ? 'bg-forge-emerald animate-pulse' : 'bg-primary'}`}
           style={{ width: `${task.progress}%` }}
         ></div>
       </div>
@@ -143,8 +144,17 @@ const TaskDetailDrawer: React.FC<{
 };
 
 const TaskManagerView: React.FC = () => {
-  const { scope, agents, tasks, setTasks } = useScope();
+  const { scope, agents, tasks, setAgents, setTasks } = useScope();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  // Live updates hook
+  const { isLive, isUpdating, lastUpdate, toggleLive } = useLiveUpdates(
+    agents,
+    tasks,
+    setAgents,
+    setTasks,
+    3000 // Refresh every 3 seconds
+  );
 
   useEffect(() => {
     setSelectedTask(null);
@@ -180,11 +190,33 @@ const TaskManagerView: React.FC = () => {
           <h2 className="text-3xl font-extrabold text-white font-display tracking-tight">Workforce Board</h2>
           <p className="text-forge-text-muted text-sm mt-1">Real-time task synchronization across <span className="text-primary font-bold">{scope}</span> environment.</p>
         </div>
-        <div className="flex gap-2">
-          <div className="flex items-center gap-3 px-4 py-2 bg-forge-surface border border-forge-border rounded-pill">
-            <div className="size-2 rounded-full bg-forge-emerald animate-pulse"></div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-forge-text-muted">Live Sync Enabled</span>
+        <div className="flex gap-3 items-center">
+          {/* Live Sync Status */}
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-pill border transition-all ${
+            isLive 
+              ? 'bg-forge-emerald/10 border-forge-emerald/30' 
+              : 'bg-forge-surface border-forge-border'
+          }`}>
+            <button 
+              onClick={toggleLive}
+              className="flex items-center gap-2"
+            >
+              <div className="relative">
+                {isUpdating && (
+                  <span className="absolute inset-0 bg-forge-emerald/30 rounded-full animate-ping"></span>
+                )}
+                <span className={`size-2 rounded-full ${isLive ? 'bg-forge-emerald shadow-glow-emerald' : 'bg-forge-text-muted'}`}></span>
+              </div>
+              <span className={`text-[9px] font-black uppercase tracking-widest ${isLive ? 'text-forge-emerald' : 'text-forge-text-muted'}`}>
+                {isLive ? 'LIVE' : 'PAUSED'}
+              </span>
+            </button>
           </div>
+          {isLive && (
+            <span className="text-[8px] text-forge-text-muted font-mono hidden md:inline">
+              Last sync: {lastUpdate.toLocaleTimeString()}
+            </span>
+          )}
         </div>
       </header>
 
@@ -197,7 +229,7 @@ const TaskManagerView: React.FC = () => {
               key={col.id} 
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, col.id)}
-              className="w-80 shrink-0 flex flex-col gap-4 bg-forge-surface/20 rounded-3xl p-4 border border-forge-border/40"
+              className="w-72 sm:w-80 shrink-0 flex flex-col gap-4 bg-forge-surface/20 rounded-3xl p-3 sm:p-4 border border-forge-border/40"
             >
               <div className="flex items-center justify-between px-2 mb-2">
                 <div className="flex items-center gap-2">

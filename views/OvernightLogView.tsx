@@ -17,16 +17,16 @@ const OvernightLogView: React.FC = () => {
           </div>
         </header>
 
-        <div className="w-full max-w-[800px] px-6 flex flex-col gap-8">
+        <div className="w-full max-w-[800px] px-6 flex flex-col gap-6 md:gap-8">
           {logs.map((log) => (
-            <div key={log.id} className="flex gap-10 items-start">
-              <div className="md:w-[60px] text-sm font-mono text-forge-text-muted">{log.timestamp}</div>
-              <div className={`flex-1 bg-forge-surface border rounded-card p-5 border-forge-border hover:border-primary/50 transition-all`}>
-                <div className="flex items-center gap-4">
-                  <img src={log.agentAvatar} className="size-10 rounded-full" alt={log.agentName} />
-                  <div>
-                    <h3 className="text-white font-bold">{log.agentName} {log.action}</h3>
-                    <p className="text-xs text-forge-text-muted">{log.summary}</p>
+            <div key={log.id} className="flex gap-3 md:gap-10 items-start">
+              <div className="w-[50px] md:w-[60px] text-xs md:text-sm font-mono text-forge-text-muted shrink-0">{log.timestamp}</div>
+              <div className={`flex-1 bg-forge-surface border rounded-card p-4 md:p-5 border-forge-border hover:border-primary/50 transition-all`}>
+                <div className="flex items-start gap-3 md:gap-4">
+                  <img src={log.agentAvatar} className="size-8 md:size-10 rounded-full shrink-0" alt={log.agentName} />
+                  <div className="min-w-0">
+                    <h3 className="text-white font-bold text-sm md:text-base">{log.agentName} {log.action}</h3>
+                    <p className="text-xs text-forge-text-muted mt-1">{log.summary}</p>
                   </div>
                 </div>
               </div>

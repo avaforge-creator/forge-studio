@@ -1,13 +1,53 @@
 
 import React, { useState } from 'react';
 import { useScope } from '../context/ScopeContext';
+import { useAuth } from '../context/AuthContext';
 
 const SettingsView: React.FC = () => {
   const { scope } = useScope();
+  const { user, changePassword } = useAuth();
   const [directorName, setDirectorName] = useState('Director');
   const [budgetLimit, setBudgetLimit] = useState(1000);
   const [gridVisible, setGridVisible] = useState(true);
   const [notifications, setNotifications] = useState(true);
+  
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  
+  const handlePasswordChange = () => {
+    setPasswordError('');
+    setPasswordSuccess(false);
+    
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError('All fields are required.');
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match.');
+      return;
+    }
+    
+    if (newPassword.length < 4) {
+      setPasswordError('Password must be at least 4 characters.');
+      return;
+    }
+    
+    const result = changePassword(currentPassword, newPassword);
+    if (result.success) {
+      setPasswordSuccess(true);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => setPasswordSuccess(false), 3000);
+    } else {
+      setPasswordError(result.error || 'Failed to change password.');
+    }
+  };
 
   return (
     <div className={`flex-1 overflow-y-auto p-8 md:p-12 relative ${gridVisible ? 'bg-grid-subtle' : ''}`}>
@@ -81,9 +121,10 @@ const SettingsView: React.FC = () => {
               </div>
               <button 
                 onClick={() => setNotifications(!notifications)}
-                className={`w-12 h-6 rounded-full transition-colors relative ${notifications ? 'bg-forge-emerald' : 'bg-forge-border'}`}
+                className={`w-14 h-8 md:w-12 md:h-6 rounded-full transition-colors relative touch-manipulation ${notifications ? 'bg-forge-emerald' : 'bg-forge-border'}`}
+                aria-label="Toggle Gemini 3 Pro Usage"
               >
-                <div className={`absolute top-1 size-4 bg-white rounded-full transition-all ${notifications ? 'left-7' : 'left-1'}`}></div>
+                <div className={`absolute top-1 md:top-1 size-5 md:size-4 bg-white rounded-full transition-all ${notifications ? 'left-8 md:left-7' : 'left-1'}`}></div>
               </button>
             </div>
           </div>
@@ -104,9 +145,10 @@ const SettingsView: React.FC = () => {
               </div>
               <button 
                 onClick={() => setGridVisible(!gridVisible)}
-                className={`w-12 h-6 rounded-full transition-colors relative ${gridVisible ? 'bg-primary' : 'bg-forge-border'}`}
+                className={`w-14 h-8 md:w-12 md:h-6 rounded-full transition-colors relative touch-manipulation ${gridVisible ? 'bg-primary' : 'bg-forge-border'}`}
+                aria-label="Toggle Neural Grid Visibility"
               >
-                <div className={`absolute top-1 size-4 bg-white rounded-full transition-all ${gridVisible ? 'left-7' : 'left-1'}`}></div>
+                <div className={`absolute top-1 md:top-1 size-5 md:size-4 bg-white rounded-full transition-all ${gridVisible ? 'left-8 md:left-7' : 'left-1'}`}></div>
               </button>
             </div>
             
@@ -119,6 +161,75 @@ const SettingsView: React.FC = () => {
               </div>
               <span className="text-[10px] font-mono text-forge-emerald bg-forge-emerald/10 px-2 py-0.5 rounded border border-forge-emerald/20">CONNECTED</span>
             </div>
+          </div>
+        </section>
+
+        {/* Password Change */}
+        <section className="bg-forge-surface/40 backdrop-blur-md border border-forge-border rounded-3xl p-8 space-y-6">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="material-symbols-outlined text-forge-amber">lock</span>
+            <h2 className="text-lg font-display font-bold text-white uppercase tracking-widest">Change Password</h2>
+          </div>
+
+          {user && (
+            <p className="text-sm text-forge-text-muted mb-4">
+              Logged in as: <span className="text-primary font-bold">{user.email}</span>
+            </p>
+          )}
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-forge-text-muted uppercase tracking-widest">Current Password</label>
+              <input 
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+                className="w-full bg-forge-bg border border-forge-border rounded-xl px-4 py-3 text-white focus:ring-1 focus:ring-primary outline-none transition-all"
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-forge-text-muted uppercase tracking-widest">New Password</label>
+                <input 
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                  className="w-full bg-forge-bg border border-forge-border rounded-xl px-4 py-3 text-white focus:ring-1 focus:ring-primary outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-forge-text-muted uppercase tracking-widest">Confirm New Password</label>
+                <input 
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  className="w-full bg-forge-bg border border-forge-border rounded-xl px-4 py-3 text-white focus:ring-1 focus:ring-primary outline-none transition-all"
+                />
+              </div>
+            </div>
+
+            {passwordError && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+                {passwordError}
+              </div>
+            )}
+            
+            {passwordSuccess && (
+              <div className="p-3 bg-forge-emerald/10 border border-forge-emerald/20 rounded-lg text-forge-emerald text-sm">
+                ✓ Password changed successfully!
+              </div>
+            )}
+
+            <button 
+              onClick={handlePasswordChange}
+              className="px-6 py-2 bg-forge-amber/20 border border-forge-amber/40 text-forge-amber hover:bg-forge-amber/30 rounded-xl text-sm font-bold transition-all"
+            >
+              Update Password
+            </button>
           </div>
         </section>
 

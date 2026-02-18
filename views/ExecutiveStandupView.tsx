@@ -1,30 +1,95 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { useScope } from '../context/ScopeContext';
+import { useOpenClawData, formatTokens } from '../hooks/useOpenClawData';
+import { useChatHistory, getAgentDisplayName, formatRelativeTime } from '../hooks/useChatHistory';
 
 interface StandupMessage {
-  speaker: 'Muddy' | 'Elon' | 'Gary' | 'Warren';
+  speaker: string;
   text: string;
   isActionItem: boolean;
   timestamp: string;
+  avatar: string;
+  color: string;
 }
 
 const ExecutiveStandupView: React.FC = () => {
-  const { scope } = useScope();
+  const { scope, tasks } = useScope();
   const [topic, setTopic] = useState('');
   const [messages, setMessages] = useState<StandupMessage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [actionItems, setActionItems] = useState<{ text: string; done: boolean }[]>([]);
   const [notification, setNotification] = useState<string | null>(null);
+  const [showSummary, setShowSummary] = useState(true);
+  const [showChatHistory, setShowChatHistory] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const personaMeta = {
-    Muddy: { avatar: 'https://picsum.photos/seed/muddy/100/100', role: 'COO / Moderator', color: 'text-forge-emerald' },
-    Elon: { avatar: 'https://picsum.photos/seed/elon/100/100', role: 'CTO / First Principles', color: 'text-blue-400' },
-    Gary: { avatar: 'https://picsum.photos/seed/gary/100/100', role: 'CMO / Hyper-Speed', color: 'text-forge-amber' },
-    Warren: { avatar: 'https://picsum.photos/seed/warren/100/100', role: 'CRO / Long-Term Value', color: 'text-forge-rose' },
+  // Get real OpenClaw data
+  const { 
+    totalTokens, 
+    dailySpend, 
+    contextUsed, 
+    contextLimit,
+    agents: openclawAgents,
+    sessions,
+    usage
+  } = useOpenClawData(5000);
+
+  // Get chat history
+  const { sessions: chatSessions, isLoading: chatLoading } = useChatHistory(5000);
+
+  // Calculate real metrics
+  const activeAgents = openclawAgents.filter(a => a.lastActiveAgeMs !== null && a.lastActiveAgeMs < 3600000).length;
+  const totalAgents = openclawAgents.length;
+  const inProgressTasks = tasks.filter(t => t.status === 'in-progress').length;
+  const completedTasks = tasks.filter(t => t.status === 'complete').length;
+  const todoTasks = tasks.filter(t => t.status === 'todo').length;
+  
+  // Get today's usage
+  const todayUsage = usage.find(u => u.date === new Date().toISOString().split('T')[0]);
+  const todayTokens = todayUsage?.totalTokens || 0;
+
+  // Pre-generated summary from real data
+  const summaryReport = `📊 DAILY OPERATIONAL SUMMARY - ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+
+🎯 ACTIVE SESSIONS: ${sessions.length} total
+• Main (Ava): ${sessions.find(s => s.key.includes('main:telegram')) ? 'Active - Telegram group' : 'Idle'}
+• Zara: ${sessions.filter(s => s.key.includes('zara')).length} subagent sessions running
+• Total Tokens Today: ${formatTokens(todayTokens)}
+
+🤖 AGENT STATUS: ${activeAgents}/${totalAgents} active
+${openclawAgents.slice(0, 5).map(a => `• ${a.agentId}: ${a.sessionsCount} sessions`).join('\n')}
+
+📋 TASK BOARD:
+• In Progress: ${inProgressTasks}
+• Completed: ${completedTasks}  
+• To-Do: ${todoTasks}
+
+💰 COST TRACKING:
+• Today's Spend: $${dailySpend.toFixed(2)}
+• Context Usage: ${Math.round((contextUsed / contextLimit) * 100)}%
+• Total Tokens Used: ${formatTokens(totalTokens)}`;
+
+  // Agent persona colors
+  const getAgentColor = (agentId: string): string => {
+    const colors: Record<string, string> = {
+      'main': 'text-forge-emerald',
+      'zara': 'text-blue-400',
+      'eli': 'text-forge-amber',
+      'kai': 'text-purple-400',
+      'maya': 'text-pink-400',
+      'nina': 'text-forge-rose',
+      'noah': 'text-orange-400',
+      'omar': 'text-teal-400',
+      'sophia': 'text-indigo-400',
+      'lily_babak': 'text-cyan-400',
+    };
+    return colors[agentId] || 'text-white';
+  };
+
+  // Agent avatars (using generated avatars based on name)
+  const getAgentAvatar = (agentId: string): string => {
+    return `https://api.dicebear.com/7.x/bottts/svg?seed=${agentId}&backgroundColor=1a1a2e`;
   };
 
   const scrollToBottom = () => {
@@ -35,213 +100,221 @@ const ExecutiveStandupView: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  const startStandup = async () => {
-    if (!topic.trim()) return;
+  // Transform chat sessions into standup messages
+  useEffect(() => {
+    if (!showChatHistory || chatSessions.length === 0) return;
 
-    setIsGenerating(true);
-    setMessages([]);
-    setAudioUrl(null);
-    setActionItems([]);
-    setNotification(null);
-
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
-      
-      // Step 1: Generate autonomous conversation
-      const response = await ai.models.generateContent({
-        model: "gemini-3-pro-preview",
-        contents: `Conduct a executive standup meeting about the topic: "${topic}". 
-        Include:
-        - Muddy (COO): Professional moderator, delegates.
-        - Elon (CTO): First principles, security focused.
-        - Gary (CMO): High energy, speedy marketing angle.
-        - Warren (CRO): Long-term revenue protection.
-        
-        The conversation must be a multi-turn debate between all four agents. 
-        Each agent must stay in character.
-        If an agent suggests a specific task, mark 'isActionItem' as true.`,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                speaker: { type: Type.STRING, enum: ['Muddy', 'Elon', 'Gary', 'Warren'] },
-                text: { type: Type.STRING },
-                isActionItem: { type: Type.BOOLEAN }
-              },
-              required: ['speaker', 'text', 'isActionItem']
-            }
-          }
-        }
-      });
-
-      const transcript: any[] = JSON.parse(response.text);
-      const mappedMessages: StandupMessage[] = transcript.map(m => ({
-        ...m,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    const newMessages: StandupMessage[] = chatSessions.slice(0, 10).flatMap((session) => {
+      return session.messages.map((msg) => ({
+        speaker: getAgentDisplayName(session.agentId),
+        text: msg.content,
+        isActionItem: false,
+        timestamp: formatRelativeTime(msg.timestamp),
+        avatar: getAgentAvatar(session.agentId),
+        color: getAgentColor(session.agentId),
       }));
+    });
 
-      // Stream the messages in with a small delay for "live" effect
-      for (const msg of mappedMessages) {
-        setMessages(prev => [...prev, msg]);
-        if (msg.isActionItem) {
-          setActionItems(prev => [...prev, { text: msg.text, done: false }]);
-        }
-        await new Promise(r => setTimeout(r, 800));
-      }
+    setMessages(newMessages);
+  }, [chatSessions, showChatHistory]);
 
-      // Step 2: Generate Audio Recap (Podcast Style)
-      const fullTranscriptText = mappedMessages.map(m => `${m.speaker}: ${m.text}`).join('\n');
-      const ttsResponse = await ai.models.generateContent({
-        model: "gemini-2.5-flash-preview-tts",
-        contents: [{ 
-          parts: [{ 
-            text: `Summarize this executive standup as a high-energy podcast recap: "${fullTranscriptText}". 
-            Gary is very upbeat and speaks quickly. Muddy is professional. Elon is calm. Warren is thoughtful.` 
-          }] 
-        }],
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: 'Zephyr' },
-            },
-          },
-        },
-      });
-
-      const base64Audio = ttsResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-      if (base64Audio) {
-        const blob = new Blob([Uint8Array.from(atob(base64Audio), c => c.charCodeAt(0))], { type: 'audio/pcm' });
-        // NOTE: In a real environment, we'd need a proper PCM to WAV/MP3 conversion for the <audio> tag.
-        // For this demo, we'll simulate the URL generation.
-        setAudioUrl(`data:audio/mp3;base64,${base64Audio}`);
-      }
-
-      // Step 3: Trigger Telegram Notification Simulation
-      setNotification("Ping: Executive Summary sent to @DirectorTelegram. Audio file attached.");
-
-    } catch (error) {
-      console.error("Standup failed:", error);
-    } finally {
-      setIsGenerating(false);
-    }
+  const startStandup = async () => {
+    // Toggle between summary and chat history
+    setShowSummary(!showSummary);
+    setShowChatHistory(!showChatHistory);
   };
 
   return (
     <div className="flex h-full flex-col bg-forge-bg overflow-hidden">
       {/* Header Area */}
-      <div className="p-8 border-b border-forge-border bg-forge-surface/30 backdrop-blur-xl">
-        <div className="max-w-4xl mx-auto flex flex-col gap-4">
-          <div>
-            <h1 className="text-3xl font-display font-bold text-white mb-1 tracking-tight">Executive Standup</h1>
-            <p className="text-forge-text-muted text-sm">Autonomous C-Suite coordination loop.</p>
+      <div className="p-2 md:p-3 border-b border-forge-border bg-forge-surface/30 backdrop-blur-xl">
+        <div className="max-w-4xl mx-auto flex flex-row items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-display font-bold text-white tracking-tight">Executive Standup</h1>
+            <span className="text-forge-text-muted text-xs hidden sm:inline">Live agent communications & coordination</span>
           </div>
-          <div className="flex gap-3">
-            <input 
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="Enter meeting topic (e.g., Inbound Partnership Requests)..."
-              className="flex-1 bg-forge-bg border border-forge-border rounded-pill px-6 py-3 text-white focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-forge-text-muted/50"
-              disabled={isGenerating}
-            />
+          <div className="flex gap-2">
+            <button 
+              onClick={() => { setShowSummary(!showSummary); setShowChatHistory(!showChatHistory); }}
+              className="bg-forge-surface border border-forge-border text-white font-medium text-xs px-3 py-1.5 rounded-lg hover:bg-forge-border transition-all"
+            >
+              {showSummary ? 'Show Chat History' : 'Show Summary'}
+            </button>
             <button 
               onClick={startStandup}
-              disabled={isGenerating || !topic.trim()}
-              className="bg-primary text-black font-black uppercase tracking-widest text-xs px-8 py-3 rounded-pill shadow-glow-gold hover:bg-yellow-500 transition-all disabled:opacity-50 disabled:grayscale"
+              disabled={isGenerating}
+              className="bg-primary text-black font-bold uppercase tracking-wide text-xs px-4 py-1.5 rounded-lg shadow-glow-gold hover:bg-yellow-500 transition-all disabled:opacity-50 disabled:grayscale"
             >
-              {isGenerating ? 'Simulating...' : 'Start Standup'}
+              {isGenerating ? 'Loading...' : 'Refresh Data'}
             </button>
           </div>
         </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Main Moderator View */}
-        <main className="flex-1 overflow-y-auto p-8 bg-grid-subtle scroll-smooth">
-          <div className="max-w-3xl mx-auto space-y-6 pb-20">
-            {messages.length === 0 && !isGenerating && (
+        {/* Main Chat View - Takes full remaining width */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-grid-subtle scroll-smooth">
+          <div className="max-w-4xl mx-auto space-y-4 pb-24">
+            {/* Summary Report - Always visible when no active standup */}
+            {showSummary && (
+              <div className="bg-forge-surface border border-forge-border rounded-card p-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-forge-emerald/10 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-forge-emerald">assessment</span>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Live Operations Report</h3>
+                    <p className="text-[10px] text-forge-text-muted">Real-time data from OpenClaw</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                  <div className="bg-forge-bg rounded-xl p-3 border border-forge-border">
+                    <span className="text-[10px] text-forge-text-muted uppercase font-bold tracking-wider block">Active Sessions</span>
+                    <span className="text-xl font-display font-bold text-white">{sessions.length}</span>
+                  </div>
+                  <div className="bg-forge-bg rounded-xl p-3 border border-forge-border">
+                    <span className="text-[10px] text-forge-text-muted uppercase font-bold tracking-wider block">Agents Active</span>
+                    <span className="text-xl font-display font-bold text-forge-emerald">{activeAgents}/{totalAgents}</span>
+                  </div>
+                  <div className="bg-forge-bg rounded-xl p-3 border border-forge-border">
+                    <span className="text-[10px] text-forge-text-muted uppercase font-bold tracking-wider block">Tasks In Progress</span>
+                    <span className="text-xl font-display font-bold text-primary">{inProgressTasks}</span>
+                  </div>
+                  <div className="bg-forge-bg rounded-xl p-3 border border-forge-border">
+                    <span className="text-[10px] text-forge-text-muted uppercase font-bold tracking-wider block">Today Tokens</span>
+                    <span className="text-xl font-display font-bold text-white">{formatTokens(todayTokens)}</span>
+                  </div>
+                </div>
+
+                <pre className="text-xs text-forge-text-main whitespace-pre-wrap font-mono bg-[#121212] p-4 rounded-xl border border-forge-border overflow-x-auto">
+                  {summaryReport}
+                </pre>
+
+                <button 
+                  onClick={() => { setShowSummary(false); setShowChatHistory(true); }}
+                  className="mt-4 text-[10px] text-forge-text-muted hover:text-white uppercase font-bold tracking-widest flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-sm">forum</span>
+                  View Chat History
+                </button>
+              </div>
+            )}
+
+            {/* Chat History View */}
+            {showChatHistory && (
+              <div className="space-y-3 overflow-y-auto max-h-[calc(100vh-280px)] pr-2">
+                <div className="flex items-center justify-between mb-2 sticky top-0 bg-forge-bg/90 backdrop-blur-sm py-2 z-10">
+                  <h2 className="text-sm font-bold text-forge-text-muted uppercase tracking-widest flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary">groups</span>
+                    Agent Communications Hub
+                  </h2>
+                  <span className="text-[10px] text-forge-text-muted">
+                    {chatSessions.length} active sessions
+                  </span>
+                </div>
+
+                {chatLoading ? (
+                  <div className="h-64 flex flex-col items-center justify-center text-forge-text-muted opacity-20 border-2 border-dashed border-forge-border rounded-card">
+                    <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p className="font-display uppercase tracking-widest text-sm">Loading chat history...</p>
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="h-64 flex flex-col items-center justify-center text-forge-text-muted opacity-20 border-2 border-dashed border-forge-border rounded-card">
+                    <span className="material-symbols-outlined text-6xl mb-4">forum</span>
+                    <p className="font-display uppercase tracking-widest text-sm">No active communications</p>
+                  </div>
+                ) : (
+                  messages.map((msg, i) => (
+                    <div key={i} className={`flex gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500`}>
+                      <img src={msg.avatar} className="size-10 rounded-lg ring-2 ring-forge-border shrink-0 bg-forge-bg" alt={msg.speaker} />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-xs font-bold uppercase tracking-widest ${msg.color}`}>{msg.speaker}</span>
+                          <span className="text-[10px] text-forge-text-muted font-mono">{msg.timestamp}</span>
+                          {msg.isActionItem && (
+                            <span className="text-[9px] bg-primary/10 text-primary border border-primary/20 px-1.5 rounded-full font-bold uppercase">Decision</span>
+                          )}
+                        </div>
+                        <div className="bg-forge-surface/80 border border-forge-border p-4 rounded-card text-forge-text-main text-sm leading-relaxed shadow-sm">
+                          {msg.text}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+                <div ref={chatEndRef} />
+              </div>
+            )}
+
+            {messages.length === 0 && !isGenerating && !showSummary && !showChatHistory && (
               <div className="h-64 flex flex-col items-center justify-center text-forge-text-muted opacity-20 border-2 border-dashed border-forge-border rounded-card">
                 <span className="material-symbols-outlined text-6xl mb-4">forum</span>
                 <p className="font-display uppercase tracking-widest text-sm">Waiting for topic initiation</p>
               </div>
             )}
-
-            {messages.map((msg, i) => {
-              const meta = personaMeta[msg.speaker];
-              return (
-                <div key={i} className={`flex gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500`}>
-                  <img src={meta.avatar} className="size-10 rounded-lg ring-2 ring-forge-border shrink-0" alt={msg.speaker} />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-xs font-bold uppercase tracking-widest ${meta.color}`}>{msg.speaker}</span>
-                      <span className="text-[10px] text-forge-text-muted font-mono">{msg.timestamp}</span>
-                      {msg.isActionItem && (
-                        <span className="text-[9px] bg-primary/10 text-primary border border-primary/20 px-1.5 rounded-full font-bold uppercase">Decision</span>
-                      )}
-                    </div>
-                    <div className="bg-forge-surface/80 border border-forge-border p-4 rounded-card text-forge-text-main text-sm leading-relaxed shadow-sm">
-                      {msg.text}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            <div ref={chatEndRef} />
           </div>
         </main>
 
-        {/* Action Items Sidebar */}
-        <aside className="w-80 border-l border-forge-border bg-forge-surface/20 backdrop-blur-md p-6 flex flex-col gap-6">
+        {/* Active Sessions Sidebar - narrower */}
+        <aside className="hidden lg:flex w-64 border-l border-forge-border bg-forge-surface/20 backdrop-blur-md p-4 flex-col gap-4 overflow-y-auto">
           <div>
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-forge-text-muted mb-4">Action Items</h3>
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-forge-text-muted mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm">hub</span>
+              Active Sessions
+            </h3>
             <div className="space-y-3">
-              {actionItems.map((item, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 bg-forge-bg/50 border border-forge-border rounded-xl group transition-all hover:border-primary/30">
-                  <input 
-                    type="checkbox" 
-                    checked={item.done} 
-                    onChange={() => {
-                      const newItems = [...actionItems];
-                      newItems[i].done = !newItems[i].done;
-                      setActionItems(newItems);
-                    }}
-                    className="mt-1 rounded border-forge-border bg-forge-bg text-primary focus:ring-primary"
+              {chatSessions.slice(0, 8).map((session, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 bg-forge-bg/50 border border-forge-border rounded-xl">
+                  <img 
+                    src={getAgentAvatar(session.agentId)} 
+                    className="size-8 rounded-lg bg-forge-bg" 
+                    alt={session.agentId} 
                   />
-                  <span className={`text-xs leading-normal ${item.done ? 'line-through text-forge-text-muted' : 'text-white'}`}>
-                    {item.text}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-white font-bold truncate">
+                      {getAgentDisplayName(session.agentId)}
+                    </p>
+                    <p className="text-[10px] text-forge-text-muted truncate">
+                      {session.label || session.key.split(':').slice(2).join(':')}
+                    </p>
+                  </div>
+                  <span className="text-[10px] text-forge-text-muted">
+                    {formatRelativeTime(session.updatedAt)}
                   </span>
                 </div>
               ))}
-              {actionItems.length === 0 && (
-                <p className="text-[10px] text-forge-text-muted italic">No items decided yet.</p>
+              {chatSessions.length === 0 && (
+                <p className="text-[10px] text-forge-text-muted italic">No active sessions.</p>
               )}
             </div>
           </div>
 
-          {/* Podcast Recap Section */}
+          {/* Agent Status Section */}
           <div className="mt-auto pt-6 border-t border-forge-border">
             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-sm">podcasts</span>
-              Listen to Recap
+              <span className="material-symbols-outlined text-sm">psychology</span>
+              Agent Roster
             </h3>
-            {audioUrl ? (
-              <div className="bg-forge-bg border border-forge-border rounded-2xl p-4 animate-in zoom-in duration-300">
-                <audio controls src={audioUrl} className="w-full h-8 accent-primary" />
-                <p className="text-[10px] text-forge-text-muted mt-2 text-center">Compiled Podcast Recap.mp3</p>
-              </div>
-            ) : isGenerating ? (
-              <div className="p-8 text-center bg-forge-bg/30 rounded-2xl border border-forge-border border-dashed">
-                <div className="size-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                <p className="text-[10px] text-forge-text-muted">Generating Audio...</p>
-              </div>
-            ) : (
-              <div className="p-8 text-center bg-forge-bg/30 rounded-2xl border border-forge-border border-dashed">
-                <p className="text-[10px] text-forge-text-muted">Audio available after standup completes.</p>
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-2">
+              {openclawAgents.slice(0, 8).map((agent) => (
+                <div 
+                  key={agent.agentId} 
+                  className={`p-2 rounded-lg border ${
+                    agent.lastActiveAgeMs && agent.lastActiveAgeMs < 3600000
+                      ? 'bg-forge-emerald/10 border-forge-emerald/30'
+                      : 'bg-forge-bg/50 border-forge-border'
+                  }`}
+                >
+                  <p className={`text-xs font-bold ${getAgentColor(agent.agentId)}`}>
+                    {getAgentDisplayName(agent.agentId)}
+                  </p>
+                  <p className="text-[10px] text-forge-text-muted">
+                    {agent.sessionsCount} sessions
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </aside>
       </div>

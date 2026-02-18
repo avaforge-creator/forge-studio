@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Agent, Task } from '../types';
 import { useScope } from '../context/ScopeContext';
+import { useLiveUpdates } from '../hooks/useLiveUpdates';
 
 const BLANK_AGENT = (id: string): Agent => ({
   id,
@@ -329,11 +330,30 @@ const AgentEditor: React.FC<{
 };
 
 const AgentWorkspaceView: React.FC = () => {
-  const { scope, agents, setAgents, tasks } = useScope();
+  const { scope, agents, setAgents, tasks, setTasks } = useScope();
   const [selectedAgent, setSelectedAgent] = useState(agents[0]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  
+  // File management state
+  const [agentFiles, setAgentFiles] = useState<string[]>([]);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [fileContent, setFileContent] = useState<string>('');
+  const [isEditingFile, setIsEditingFile] = useState(false);
+  const [isSavingFile, setIsSavingFile] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [filesLoading, setFilesLoading] = useState(false);
+  const [isFileModalOpen, setIsFileModalOpen] = useState(false);
+
+  // Live updates hook - updates every 3 seconds
+  const { isLive, isUpdating, lastUpdate, toggleLive } = useLiveUpdates(
+    agents,
+    tasks,
+    setAgents,
+    setTasks,
+    3000
+  );
 
   // Ensure selection remains valid if agents change or scope changes
   useEffect(() => {
@@ -342,6 +362,7 @@ const AgentWorkspaceView: React.FC = () => {
     }
   }, [agents]);
 
+  // Legacy syncing effect (for display purposes)
   useEffect(() => {
     const interval = setInterval(() => {
       setIsSyncing(true);
@@ -349,6 +370,79 @@ const AgentWorkspaceView: React.FC = () => {
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch files when selected agent changes
+  useEffect(() => {
+    if (selectedAgent) {
+      // Convert agent name to lowercase for API call (folder names are lowercase)
+      const agentFolderName = selectedAgent.name.toLowerCase().replace(/\s+/g, '_').replace(/[()]/g, '');
+      fetchFilesForAgent(agentFolderName);
+    }
+  }, [selectedAgent?.id]);
+
+  // Fetch file content when selected file changes
+  useEffect(() => {
+    if (selectedAgent && selectedFile) {
+      const agentFolderName = selectedAgent.name.toLowerCase().replace(/\s+/g, '_').replace(/[()]/g, '');
+      fetchFileContent(agentFolderName, selectedFile);
+      setIsFileModalOpen(true); // Open modal when file is selected
+    }
+  }, [selectedFile]);
+
+  const fetchFilesForAgent = async (agentName: string) => {
+    setFilesLoading(true);
+    try {
+      const res = await fetch(`/api/agents/${agentName}/files`);
+      const data = await res.json();
+      setAgentFiles(data || []);
+      setSelectedFile(null);
+      setFileContent('');
+    } catch (e) {
+      console.error('Failed to fetch files:', e);
+      setAgentFiles([]);
+    }
+    setFilesLoading(false);
+  };
+
+  const fetchFileContent = async (agentName: string, filename: string) => {
+    try {
+      const res = await fetch(`/api/agents/${agentName}/files/${filename}`);
+      const text = await res.text();
+      setFileContent(text);
+      setIsEditingFile(false);
+    } catch (e) {
+      console.error('Failed to fetch file:', e);
+    }
+  };
+
+  const saveFile = async () => {
+    if (!selectedAgent || !selectedFile) return;
+    
+    setIsSavingFile(true);
+    setSaveMessage(null);
+    
+    try {
+      const agentFolderName = selectedAgent.name.toLowerCase().replace(/\s+/g, '_').replace(/[()]/g, '');
+      const res = await fetch(`/api/agents/${agentFolderName}/files/${selectedFile}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'text/plain' },
+        body: fileContent
+      });
+      
+      if (res.ok) {
+        setSaveMessage('Saved successfully!');
+        setTimeout(() => setSaveMessage(null), 2000);
+        setIsEditingFile(false);
+      } else {
+        setSaveMessage('Failed to save');
+      }
+    } catch (e) {
+      console.error('Failed to save file:', e);
+      setSaveMessage('Failed to save');
+    }
+    
+    setIsSavingFile(false);
+  };
 
   const agentTasks = useMemo(() => {
     return tasks.filter(t => t.assignedTo === selectedAgent?.id);
@@ -396,14 +490,31 @@ const AgentWorkspaceView: React.FC = () => {
 
   return (
     <div className="flex-1 flex overflow-hidden bg-forge-bg">
-      {/* Sidebar Roster */}
-      <aside className="w-64 flex flex-col border-r border-forge-border shrink-0 z-10 bg-forge-surface/30 backdrop-blur-md">
+      {/* Sidebar Roster - hidden on mobile */}
+      <aside className="hidden md:flex w-64 flex-col border-r border-forge-border shrink-0 z-10 bg-forge-surface/30 backdrop-blur-md">
         <div className="p-5 border-b border-forge-border/50">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-forge-text-muted">{scope} Roster</h3>
-            <div className={`flex items-center gap-1.5 transition-opacity duration-500 ${isSyncing ? 'opacity-100' : 'opacity-40'}`}>
-              <span className={`size-1.5 rounded-full bg-primary ${isSyncing ? 'animate-ping' : ''}`}></span>
-              <span className="text-[9px] font-mono text-primary font-bold">SYNC</span>
+            <div className="flex items-center gap-2">
+              {/* Live Toggle */}
+              <button 
+                onClick={toggleLive}
+                className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[8px] font-black uppercase transition-all ${
+                  isLive 
+                    ? 'bg-forge-emerald/10 text-forge-emerald border border-forge-emerald/30' 
+                    : 'bg-forge-surface text-forge-text-muted border border-forge-border'
+                }`}
+              >
+                {isUpdating && (
+                  <span className="absolute inset-0 bg-forge-emerald/20 rounded-full animate-ping"></span>
+                )}
+                <span className={`size-1.5 rounded-full ${isLive ? 'bg-forge-emerald animate-pulse' : 'bg-forge-text-muted'}`}></span>
+                {isLive ? 'LIVE' : 'OFF'}
+              </button>
+              <div className={`flex items-center gap-1.5 transition-opacity duration-500 ${isUpdating ? 'opacity-100' : 'opacity-40'}`}>
+                <span className={`size-1.5 rounded-full bg-primary ${isUpdating ? 'animate-ping' : ''}`}></span>
+                <span className="text-[9px] font-mono text-primary font-bold">SYNC</span>
+              </div>
             </div>
           </div>
         </div>
@@ -444,22 +555,39 @@ const AgentWorkspaceView: React.FC = () => {
 
       {/* Main Workspace */}
       <main className="flex-1 flex flex-col relative overflow-hidden bg-grid-subtle">
+        {/* Mobile Agent Selector */}
+        <div className="md:hidden p-4 border-b border-forge-border bg-forge-surface/50">
+          <select 
+            value={selectedAgent?.id || ''}
+            onChange={(e) => {
+              const agent = agents.find(a => a.id === e.target.value);
+              if (agent) setSelectedAgent(agent);
+            }}
+            className="w-full bg-forge-bg border border-forge-border rounded-xl px-4 py-3 text-white text-sm focus:ring-1 focus:ring-primary outline-none"
+          >
+            {agents.map(agent => (
+              <option key={agent.id} value={agent.id}>{agent.name} - {agent.role}</option>
+            ))}
+          </select>
+        </div>
+
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent pointer-events-none"></div>
         
-        <header className="px-10 pt-10 pb-6 shrink-0 z-10">
+        <header className="px-4 md:px-10 pt-6 md:pt-10 pb-6 shrink-0 z-10">
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-6">
-              <div className="relative">
-                <img src={selectedAgent.avatar} className="size-16 rounded-2xl ring-4 ring-forge-border shadow-2xl object-cover" alt={selectedAgent.name} />
-                <div className={`absolute -bottom-1 -right-1 size-5 rounded-full border-4 border-forge-bg shadow-lg ${getStatusColor(selectedAgent.status)}`}></div>
+            <div className="flex items-center gap-4 md:gap-6">
+              <div className="relative shrink-0">
+                <img src={selectedAgent.avatar} className="size-12 md:size-16 rounded-2xl ring-2 md:ring-4 ring-forge-border shadow-2xl object-cover" alt={selectedAgent.name} />
+                <div className={`absolute -bottom-1 -right-1 size-4 md:size-5 rounded-full border-2 md:border-4 border-forge-bg shadow-lg ${getStatusColor(selectedAgent.status)}`}></div>
               </div>
               <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <h1 className="font-display text-4xl font-bold text-white tracking-tight">{selectedAgent.name || 'Agent Initializing'}</h1>
-                  <span className="bg-forge-surface border border-forge-border text-forge-text-muted text-[10px] px-2 py-0.5 rounded uppercase font-black tracking-widest">{selectedAgent.id}</span>
+                <div className="flex items-center gap-2 md:gap-3 mb-1">
+                  <h1 className="font-display text-2xl md:text-4xl font-bold text-white tracking-tight">{selectedAgent.name || 'Agent Initializing'}</h1>
+                  <span className="bg-forge-surface border border-forge-border text-forge-text-muted text-[10px] px-2 py-0.5 rounded uppercase font-black tracking-widest hidden md:inline">{selectedAgent.id}</span>
                   <button 
                     onClick={() => setEditingAgent(selectedAgent)}
-                    className="size-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary/20 hover:border-primary/40 text-forge-text-muted hover:text-primary transition-all group"
+                    className="size-8 md:size-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary/20 hover:border-primary/40 text-forge-text-muted hover:text-primary transition-all group touch-manipulation"
+                    aria-label="Edit agent"
                   >
                     <span className="material-symbols-outlined text-[18px] group-hover:scale-110">edit</span>
                   </button>
@@ -474,7 +602,7 @@ const AgentWorkspaceView: React.FC = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-10 py-6 pb-24 z-10">
+        <div className="flex-1 overflow-y-auto px-4 md:px-10 py-6 pb-24 z-10">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
             
             {/* Left Column: Metrics & Specs */}
@@ -494,7 +622,7 @@ const AgentWorkspaceView: React.FC = () => {
                         <span className="material-symbols-outlined text-[16px]">{m.icon}</span>
                         <span className="text-[9px] font-black uppercase tracking-widest">{m.label}</span>
                       </div>
-                      <span className="text-2xl font-display font-medium text-white">{m.val}</span>
+                      <span className="text-xl md:text-2xl font-display font-medium text-white">{m.val}</span>
                     </div>
                   ))}
                 </div>
@@ -602,6 +730,40 @@ const AgentWorkspaceView: React.FC = () => {
                     <div className="flex-1 h-px bg-forge-border"></div>
                  </div>
               </section>
+
+              {/* Agent Files Section */}
+              <section className="bg-forge-surface/30 border border-forge-border rounded-3xl p-6 space-y-4 backdrop-blur-md">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-forge-text-muted">Agent Files (.md)</h3>
+                  <span className="text-[9px] font-mono text-primary bg-primary/10 px-2 py-0.5 rounded">{agentFiles.length} files</span>
+                </div>
+                
+                {/* File List - Stays on right side */}
+                {filesLoading ? (
+                  <div className="py-4 text-center">
+                    <span className="material-symbols-outlined text-primary animate-spin">sync</span>
+                  </div>
+                ) : agentFiles.length > 0 ? (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {agentFiles.map(file => (
+                      <button
+                        key={file}
+                        onClick={() => setSelectedFile(file)}
+                        className={`w-full text-left px-3 py-2 rounded-xl transition-all flex items-center gap-2 ${
+                          selectedFile === file
+                            ? 'bg-primary/10 text-white border border-primary/30'
+                            : 'text-forge-text-muted hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[16px] shrink-0">description</span>
+                        <span className="text-xs font-medium truncate">{file}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-forge-text-muted italic py-4 text-center">No markdown files found</p>
+                )}
+              </section>
             </div>
 
           </div>
@@ -619,6 +781,107 @@ const AgentWorkspaceView: React.FC = () => {
           }} 
           onSave={handleSaveAgent}
         />
+      )}
+
+      {/* File Editor Modal - Large popup in center of screen */}
+      {isFileModalOpen && selectedFile && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsFileModalOpen(false)}></div>
+          
+          <div className="relative w-full h-full max-w-[90vw] max-h-[90vh] bg-forge-surface border border-forge-border rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-forge-border flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-4">
+                <div className="size-12 rounded-xl flex items-center justify-center border bg-forge-emerald/10 border-forge-emerald/20">
+                  <span className="material-symbols-outlined text-forge-emerald">description</span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-display font-bold text-white">Editing File</h2>
+                  <p className="text-xs text-forge-text-muted">
+                    {selectedFile} • {selectedAgent.name}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsFileModalOpen(false)} 
+                className="size-10 rounded-full hover:bg-white/5 flex items-center justify-center transition-colors"
+              >
+                <span className="material-symbols-outlined text-forge-text-muted text-[24px]">close</span>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 p-6 overflow-hidden flex flex-col">
+              {saveMessage && (
+                <div className={`mb-4 px-4 py-2 rounded-pill text-xs ${
+                  saveMessage.includes('success') 
+                    ? 'bg-forge-emerald/10 text-forge-emerald' 
+                    : 'bg-forge-amber/10 text-forge-amber'
+                }`}>
+                  {saveMessage}
+                </div>
+              )}
+
+              {isEditingFile ? (
+                <textarea
+                  value={fileContent}
+                  onChange={(e) => setFileContent(e.target.value)}
+                  className="w-full flex-1 bg-[#0A0A0A] border border-forge-border rounded-xl p-4 text-forge-text-main text-sm font-mono resize-none focus:outline-none focus:border-primary/50"
+                  spellCheck={false}
+                  autoFocus
+                />
+              ) : (
+                <pre className="w-full flex-1 bg-[#0A0A0A] border border-forge-border rounded-xl p-4 text-forge-text-main text-sm font-mono overflow-auto whitespace-pre-wrap">
+                  {fileContent}
+                </pre>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-forge-border bg-forge-bg/50 flex items-center justify-between shrink-0">
+              <button 
+                onClick={() => setIsFileModalOpen(false)}
+                className="px-6 py-2.5 rounded-pill text-[10px] font-black uppercase tracking-widest text-forge-text-muted hover:text-white transition-all"
+              >
+                Close
+              </button>
+              <div className="flex items-center gap-3">
+                {!isEditingFile ? (
+                  <button
+                    onClick={() => setIsEditingFile(true)}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-primary/10 border border-primary/20 text-primary rounded-pill text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-black transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">edit</span>
+                    Edit
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        setIsEditingFile(false);
+                        if (selectedAgent && selectedFile) {
+                          const agentFolderName = selectedAgent.name.toLowerCase().replace(/\s+/g, '_').replace(/[()]/g, '');
+                          fetchFileContent(agentFolderName, selectedFile);
+                        }
+                      }}
+                      className="px-6 py-2.5 rounded-pill text-[10px] font-black uppercase tracking-widest text-forge-text-muted hover:text-white transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={saveFile}
+                      disabled={isSavingFile}
+                      className="flex items-center gap-2 px-8 py-2.5 bg-forge-emerald text-black rounded-pill text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-50"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">save</span>
+                      {isSavingFile ? 'Saving...' : 'Save'}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
