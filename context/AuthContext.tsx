@@ -1,6 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase, isEmailAllowed, getUserName } from '../lib/supabase';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 type User = {
   email: string;
@@ -14,96 +12,94 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => Promise<void>;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Allowed emails with their names
+const ALLOWED_USERS: Record<string, string> = {
+  'nikanwethr@gmail.com': 'Nikan',
+  'babakwethr@gmail.com': 'Babak',
+  'hsn_shrf@icloud.com': 'Hossein'
+};
+
+const isEmailAllowed = (email: string): boolean => {
+  return Object.keys(ALLOWED_USERS).includes(email.toLowerCase());
+};
+
+const getUserName = (email: string): string => {
+  return ALLOWED_USERS[email.toLowerCase()] || 'User';
+};
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser({
-          email: session.user.email || '',
-          name: getUserName(session.user.email || ''),
-          avatar: ''
-        });
+    // Check localStorage for existing session
+    const storedUser = localStorage.getItem('forge_user');
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        // Verify email is still allowed
+        if (isEmailAllowed(userData.email)) {
+          setUser(userData);
+        } else {
+          localStorage.removeItem('forge_user');
+        }
+      } catch {
+        localStorage.removeItem('forge_user');
       }
-      setIsLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser({
-          email: session.user.email || '',
-          name: getUserName(session.user.email || ''),
-          avatar: ''
-        });
-      } else {
-        setUser(null);
-      }
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    }
+    setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    // Check if Supabase is configured
-    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-      return { success: false, error: 'Supabase not configured. Contact admin.' };
-    }
-
-    // Check if email is allowed
-    if (!isEmailAllowed(email)) {
+  const login = async (email: string, _password: string): Promise<{ success: boolean; error?: string }> => {
+    // Simple auth: just check if email is allowed
+    // No password required for simplicity
+    const normalizedEmail = email.toLowerCase();
+    
+    if (!isEmailAllowed(normalizedEmail)) {
       return { success: false, error: 'Email not authorized. Contact Nikan for access.' };
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    const userData = {
+      email: normalizedEmail,
+      name: getUserName(normalizedEmail),
+      avatar: ''
+    };
 
-    if (error) {
-      return { success: false, error: error.message };
-    }
+    // Save session
+    localStorage.setItem('forge_user', JSON.stringify(userData));
+    setUser(userData);
 
     return { success: true };
   };
 
-  const signup = async (email: string, password: string, name: string): Promise<{ success: boolean; error?: string }> => {
-    // Check if Supabase is configured
-    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-      return { success: false, error: 'Supabase not configured. Contact admin.' };
-    }
-
-    // Check if email is allowed
-    if (!isEmailAllowed(email)) {
+  const signup = async (email: string, _password: string, name: string): Promise<{ success: boolean; error?: string }> => {
+    // Same as login - just authorize the email
+    const normalizedEmail = email.toLowerCase();
+    
+    if (!isEmailAllowed(normalizedEmail)) {
       return { success: false, error: 'Email not authorized. Contact Nikan for access.' };
     }
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { name }
-      }
-    });
+    const userData = {
+      email: normalizedEmail,
+      name: name || getUserName(normalizedEmail),
+      avatar: ''
+    };
 
-    if (error) {
-      return { success: false, error: error.message };
-    }
+    // Save session
+    localStorage.setItem('forge_user', JSON.stringify(userData));
+    setUser(userData);
 
     return { success: true };
   };
 
-  const logout = async () => {
-    await supabase.auth.signOut();
+  const logout = () => {
+    localStorage.removeItem('forge_user');
     setUser(null);
   };
 
