@@ -61,13 +61,32 @@ const DashboardView: React.FC = () => {
 
   // Helper to get session display name
   const getSessionDisplayName = (key: string) => {
-    if (key.includes('telegram:group')) return 'Group Chat';
+    // Forge AI Group Chat
+    if (key.includes('telegram:group') && key.includes('-5243448271')) return 'Forge AI Group';
+    if (key.includes('telegram:group')) return 'Telegram Group';
     if (key.includes('telegram')) return 'Telegram DM';
     if (key.includes('cron')) return 'Cron Job';
-    if (key.includes('subagent')) {
+    
+    // Main agent
+    if (key === 'agent:main:main' || key.includes('agent:main:')) return 'Ava (Main)';
+    
+    // Subagents - extract agent name
+    if (key.includes(':subagent:')) {
       const match = key.match(/agent:(\w+):subagent/);
-      return match ? `${match[1]} subagent` : 'Subagent';
+      if (match) {
+        const agentName = match[1].charAt(0).toUpperCase() + match[1].slice(1);
+        return `${agentName}`;
+      }
+      return 'Subagent';
     }
+    
+    // Other agent sessions - extract agent name
+    const agentMatch = key.match(/agent:(\w+)/);
+    if (agentMatch) {
+      const agentName = agentMatch[1].charAt(0).toUpperCase() + agentMatch[1].slice(1);
+      return agentName;
+    }
+    
     return key.split(':').pop() || key;
   };
 
