@@ -26,16 +26,10 @@ const LoginView: React.FC = () => {
       result = await login(email, password);
     }
 
-    // Debug logging
-    console.log('Login/Signup result:', result);
-    console.log('Supabase URL configured:', !!import.meta.env.VITE_SUPABASE_URL);
-
     if (result.success) {
       navigate('/');
     } else {
-      // Show more debug info
-      const debugInfo = !import.meta.env.VITE_SUPABASE_URL ? '[MISSING SUPABASE CONFIG] ' : '';
-      setError(debugInfo + (result.error || 'Authentication failed. Please try again.'));
+      setError(result.error || 'Authentication failed. Please try again.');
     }
     setIsLoading(false);
   };

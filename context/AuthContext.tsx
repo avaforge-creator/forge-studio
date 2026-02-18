@@ -24,9 +24,19 @@ const ALLOWED_USERS: Record<string, string> = {
   'hsn_shrf@icloud.com': 'Hossein'
 };
 
+// Passwords - users must set these initially
+// In production, use proper hashing. This is simplified.
+const USER_PASSWORDS: Record<string, string> = {
+  'nikanwethr@gmail.com': '', // Set by user
+  'babakwethr@gmail.com': '',
+  'hsn_shrf@icloud.com': ''
+};
+
 const isEmailAllowed = (email: string): boolean => {
   return Object.keys(ALLOWED_USERS).includes(email.toLowerCase());
 };
+
+export { isEmailAllowed };
 
 const getUserName = (email: string): string => {
   return ALLOWED_USERS[email.toLowerCase()] || 'User';
@@ -55,13 +65,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, _password: string): Promise<{ success: boolean; error?: string }> => {
-    // Simple auth: just check if email is allowed
-    // No password required for simplicity
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     const normalizedEmail = email.toLowerCase();
     
     if (!isEmailAllowed(normalizedEmail)) {
       return { success: false, error: 'Email not authorized. Contact Nikan for access.' };
+    }
+
+    // Check stored password
+    const storedPassword = localStorage.getItem(`forge_password_${normalizedEmail}`);
+    
+    if (storedPassword && storedPassword !== password) {
+      return { success: false, error: 'Invalid password.' };
     }
 
     const userData = {
@@ -77,13 +92,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { success: true };
   };
 
-  const signup = async (email: string, _password: string, name: string): Promise<{ success: boolean; error?: string }> => {
-    // Same as login - just authorize the email
+  const signup = async (email: string, password: string, name: string): Promise<{ success: boolean; error?: string }> => {
     const normalizedEmail = email.toLowerCase();
     
     if (!isEmailAllowed(normalizedEmail)) {
       return { success: false, error: 'Email not authorized. Contact Nikan for access.' };
     }
+
+    if (!password || password.length < 4) {
+      return { success: false, error: 'Password must be at least 4 characters.' };
+    }
+
+    // Store password
+    localStorage.setItem(`forge_password_${normalizedEmail}`, password);
 
     const userData = {
       email: normalizedEmail,
@@ -99,6 +120,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = () => {
+    // Note: We don't remove passwords on logout so users stay logged in next time
     localStorage.removeItem('forge_user');
     setUser(null);
   };

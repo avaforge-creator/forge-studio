@@ -12,7 +12,7 @@ import ProjectsView from './views/ProjectsView';
 import SettingsView from './views/SettingsView';
 import LoginView from './views/LoginView';
 import { ScopeProvider } from './context/ScopeContext';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider, useAuth, isEmailAllowed } from './context/AuthContext';
 
 // Protected route wrapper
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -36,17 +36,6 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   }
   
   return <>{children}</>;
-};
-
-// Allowed emails - hardcoded for security
-const ALLOWED_EMAILS = [
-  'nikanwethr@gmail.com',
-  'babakwethr@gmail.com', 
-  'hsn_shrf@icloud.com'
-];
-
-const isEmailAllowed = (email: string): boolean => {
-  return ALLOWED_EMAILS.includes(email.toLowerCase());
 };
 
 const AppLayout: React.FC = () => {
