@@ -8,7 +8,7 @@ export async function GET() {
     // In production, fetch from local tunnel or Vercel KV
     // For now, return a redirect or fetch from environment
     
-    const LOCAL_TUNNEL_URL = process.env.LOCAL_TUNNEL_URL || 'https://forge-aistudio.com'; // Fallback
+    const LOCAL_TUNNEL_URL = process.env.LOCAL_TUNNEL_URL || 'https://forge-aistudio.com';
     
     // Try to fetch from local machine if available
     try {

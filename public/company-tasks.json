@@ -38,7 +38,7 @@
       "status": "in-progress",
       "type": "RESEARCH",
       "executionState": "running",
-      "progress": 81,
+      "progress": 80,
       "steps": [
         {
           "label": "Set up agents in config",
@@ -69,7 +69,7 @@
       "status": "todo",
       "type": "INFRA",
       "executionState": "idle",
-      "progress": 4,
+      "progress": 0,
       "steps": [
         {
           "label": "Investigate blank screen",
@@ -96,7 +96,7 @@
       "status": "in-progress",
       "type": "FEATURE",
       "executionState": "running",
-      "progress": 91,
+      "progress": 90,
       "steps": [
         {
           "label": "Design UI component",
@@ -121,5 +121,5 @@
       ]
     }
   ],
-  "updatedAt": 1771407957000
+  "updatedAt": 1771411157688
 }
