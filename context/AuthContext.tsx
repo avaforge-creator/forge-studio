@@ -72,17 +72,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return { success: false, error: 'Email not authorized. Contact Nikan for access.' };
     }
 
-    // Check stored password - must match if it exists
+    // Check stored password
     const storedPassword = localStorage.getItem(`forge_password_${normalizedEmail}`);
+    
+    // Password is ALWAYS required for allowed emails
+    if (!password || password.length < 4) {
+      return { success: false, error: 'Password is required (min 4 characters).' };
+    }
     
     // If password was previously set, it MUST match
     if (storedPassword && storedPassword !== password) {
       return { success: false, error: 'Invalid password.' };
-    }
-    
-    // If no password was set yet, require one on login
-    if (!storedPassword && (!password || password.length < 4)) {
-      return { success: false, error: 'Please set up a password first.' };
     }
 
     const userData = {
